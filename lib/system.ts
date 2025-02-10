@@ -137,113 +137,22 @@ async function getLastRebootTime(): Promise<string> {
   }
 }
 
-// Modified main function
-export async function getSystemDetails() {
-  const currentStats = await readProcStat();
-  const currentNetworkStats = await getNetworkStats();
-
-  let cpuUsage: string | null = null;
-  let networkSpeed: unknown = null;
-
-  if (previousCpuStats) {
-    cpuUsage = calculateCpuUsage(currentStats, previousCpuStats)[0];
-  } else {
-    cpuUsage = "0.0";
-  }
-
-  if (previousNetworkStats) {
-    networkSpeed = calculateNetworkSpeed(
-      currentNetworkStats,
-      previousNetworkStats
-    );
-  }
-
-  previousCpuStats = currentStats;
-  previousNetworkStats = currentNetworkStats;
-
-  const totalMem = os.totalmem();
-  const freeMem = os.freemem();
-  const usedMem = totalMem - freeMem;
-
-  const [
-    cpuTemp,
-    gpuTemp,
-    voltage,
-    processStats,
-    diskUsage,
-    gpuUsage,
-    lastReboot,
-  ] = await Promise.all([
-    getCpuTemp(),
-    getGpuTemp(),
-    getVoltage(),
-    getProcessStats(),
-    getDiskUsage(),
-    getGpuUsage(), // New GPU usage calculation
-    getLastRebootTime(), // Get last reboot time
-  ]);
-
-  return {
-    hostname: os.hostname(),
-    platform: os.platform(),
-    arch: os.arch(),
-    cpu: {
-      temp: cpuTemp,
-      usage: cpuUsage,
-      clock: await getCpuClock(),
-      cores: os.cpus().length,
-      model: os.cpus()[0].model,
-      loadAverage: os.loadavg(),
-    },
-    gpu: {
-      temp: gpuTemp,
-      usage: gpuUsage,
-    },
-    voltage: {
-      core: voltage,
-    },
-    memoryUsage: {
-      total: parseFloat(bytesToGB(totalMem)),
-      used: parseFloat(bytesToGB(usedMem)),
-      free: parseFloat(bytesToGB(freeMem)),
-      percentUsed: ((usedMem / totalMem) * 100).toFixed(1),
-    },
-    network: {
-      interfaces: os.networkInterfaces(),
-      speed: networkSpeed,
-      stats: currentNetworkStats,
-    },
-    processes: processStats,
-    diskUsage,
-    uptime: getUptime(), // This will now return {days, hours, minutes}
-    system: {
-      osInfo: {
-        type: os.type(),
-        release: os.release(),
-        version: os.version(),
-        lastReboot: lastReboot, // Added last reboot time here
-      },
-      loadAverage: os.loadavg(),
-    },
-  };
-}
-
 // Helper function to calculate network speed
 function calculateNetworkSpeed(
   current: NetworkStats[],
   previous: NetworkStats[]
 ) {
   const interval = 1; // Assuming 1 second interval
-  return current.map((curr) => {
-    const prev = previous.find((p) => p.interface === curr.interface);
-    if (!prev) return null;
+  const curr = current.find((c) => c.interface === "eth0");
+  const prev = previous.find((p) => p.interface === "eth0");
 
-    return {
-      interface: curr.interface,
-      rxSpeed: (curr.rxBytes - prev.rxBytes) / interval,
-      txSpeed: (curr.txBytes - prev.txBytes) / interval,
-    };
-  });
+  if (!curr || !prev) return null;
+
+  return {
+    interface: curr.interface,
+    rxSpeed: (curr.rxBytes - prev.rxBytes) / interval,
+    txSpeed: (curr.txBytes - prev.txBytes) / interval,
+  };
 }
 
 async function readProcStat(): Promise<CpuStats[]> {
@@ -325,4 +234,95 @@ function getUptime() {
 
 function bytesToGB(bytes: number): string {
   return (bytes / 1024 / 1024 / 1024).toFixed(2);
+}
+
+// Modified main function
+
+export async function getSystemDetails() {
+  const currentStats = await readProcStat();
+  const currentNetworkStats = await getNetworkStats();
+
+  let cpuUsage: string | null = null;
+  let networkSpeed: null | unknown = null;
+
+  if (previousCpuStats) {
+    cpuUsage = calculateCpuUsage(currentStats, previousCpuStats)[0];
+  } else {
+    cpuUsage = "0.0";
+  }
+
+  if (previousNetworkStats) {
+    networkSpeed = calculateNetworkSpeed(
+      currentNetworkStats,
+      previousNetworkStats
+    );
+  }
+
+  previousCpuStats = currentStats;
+  previousNetworkStats = currentNetworkStats;
+
+  const totalMem = os.totalmem();
+  const freeMem = os.freemem();
+  const usedMem = totalMem - freeMem;
+
+  const [
+    cpuTemp,
+    gpuTemp,
+    voltage,
+    processStats,
+    diskUsage,
+    gpuUsage,
+    lastReboot,
+  ] = await Promise.all([
+    getCpuTemp(),
+    getGpuTemp(),
+    getVoltage(),
+    getProcessStats(),
+    getDiskUsage(),
+    getGpuUsage(), // New GPU usage calculation
+    getLastRebootTime(), // Get last reboot time
+  ]);
+
+  return {
+    hostname: os.hostname(),
+    platform: os.platform(),
+    arch: os.arch(),
+    cpu: {
+      temp: cpuTemp,
+      usage: cpuUsage,
+      clock: await getCpuClock(),
+      cores: os.cpus().length,
+      model: os.cpus()[0].model,
+      loadAverage: os.loadavg(),
+    },
+    gpu: {
+      temp: gpuTemp,
+      usage: gpuUsage,
+    },
+    voltage: {
+      core: voltage,
+    },
+    memoryUsage: {
+      total: parseFloat(bytesToGB(totalMem)),
+      used: parseFloat(bytesToGB(usedMem)),
+      free: parseFloat(bytesToGB(freeMem)),
+      percentUsed: ((usedMem / totalMem) * 100).toFixed(1),
+    },
+    network: {
+      speed: networkSpeed,
+      stats: currentNetworkStats[1],
+    },
+    processes: processStats,
+    diskUsage,
+    uptime: getUptime(), // This will now return {days, hours, minutes}
+    system: {
+      osInfo: {
+        type: os.type(),
+        release: os.release(),
+        version: os.version(),
+        lastReboot: lastReboot, // Added last reboot time here
+      },
+      loadAverage: os.loadavg(),
+    },
+  };
 }

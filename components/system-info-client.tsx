@@ -187,30 +187,14 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <h3>
-                {systemInfo.network?.stats?.find(
-                  (iface) => iface.interface === "eth0"
-                )?.interface ??
-                  systemInfo.network?.stats?.find(
-                    (iface) => iface.interface === "wlan0"
-                  )?.interface ??
-                  "Unknown Interface"}
-              </h3>
+              <h3>{systemInfo.network?.stats?.interface || "eth0"}</h3>
               <dl className="space-y-2">
                 <div className="flex justify-between">
                   <dt className="text-sm font-medium text-muted-foreground">
                     Received:
                   </dt>
                   <dd>
-                    {formatBytes(
-                      systemInfo.network?.stats?.find(
-                        (iface) => iface.interface === "eth0"
-                      )?.rxBytes ??
-                        systemInfo.network?.stats?.find(
-                          (iface) => iface.interface === "wlan0"
-                        )?.rxBytes ??
-                        0
-                    )}
+                    {formatBytes(systemInfo.network?.stats?.rxBytes || 0)}
                   </dd>
                 </div>
                 <div className="flex justify-between">
@@ -218,15 +202,7 @@ export default function Dashboard() {
                     Transmitted:
                   </dt>
                   <dd>
-                    {formatBytes(
-                      systemInfo.network?.stats?.find(
-                        (iface) => iface.interface === "eth0"
-                      )?.txBytes ??
-                        systemInfo.network?.stats?.find(
-                          (iface) => iface.interface === "wlan0"
-                        )?.txBytes ??
-                        0
-                    )}
+                    {formatBytes(systemInfo.network?.stats?.txBytes || 0)}
                   </dd>
                 </div>
                 <div className="flex justify-between">
@@ -234,16 +210,7 @@ export default function Dashboard() {
                     Download Speed:
                   </dt>
                   <dd>
-                    {formatBytes(
-                      systemInfo.network?.speed?.find(
-                        (speed) => speed.interface === "eth0"
-                      )?.rxSpeed ??
-                        systemInfo.network?.speed?.find(
-                          (speed) => speed.interface === "wlan0"
-                        )?.rxSpeed ??
-                        0,
-                      true
-                    )}
+                    {formatBytes(systemInfo.network?.speed?.rxSpeed || 0, true)}
                     /s
                   </dd>
                 </div>
@@ -252,16 +219,7 @@ export default function Dashboard() {
                     Upload Speed:
                   </dt>
                   <dd>
-                    {formatBytes(
-                      systemInfo.network?.speed?.find(
-                        (speed) => speed.interface === "eth0"
-                      )?.txSpeed ??
-                        systemInfo.network?.speed?.find(
-                          (speed) => speed.interface === "wlan0"
-                        )?.txSpeed ??
-                        0,
-                      true
-                    )}
+                    {formatBytes(systemInfo.network?.speed?.txSpeed || 0, true)}
                     /s
                   </dd>
                 </div>

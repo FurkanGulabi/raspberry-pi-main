@@ -64,11 +64,11 @@ interface OSInfo {
 }
 
 interface Network {
-  speed: NetworkSpeed[];
-  stats: NetworkStats[];
+  speed: NetworkSpeed;
+  stats: NetworkStats;
 }
 
-interface NetworkSpeed {
+export interface NetworkSpeed {
   interface: string;
   rxSpeed: number;
   txSpeed: number;
